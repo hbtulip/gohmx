@@ -1,0 +1,309 @@
+syntax = "proto3";
+
+package OilMachine;
+
+service OilTank {
+    //获取指定门店的油罐信息
+    rpc GetTankStatus (TankRequestParams) returns (TankStatus) {
+    }
+}
+
+message TankRequestParams {
+     uint64 StoreID = 1; //门店编号
+     uint32 TankID = 2;  //油罐编号
+}
+
+service OilNozzle {
+    //获取油枪状态
+    rpc GetNozzleStatus (NozzleRequestParams) returns (AtgTerminal) {
+	}
+	//获取油枪配置信息
+	rpc GetNozzleConfig (NozzleRequestParams) returns (Probe) {
+	}	
+	//获取油枪相关交易
+	rpc GetTxCountStatus (NozzleRequestParams) returns (Transaction) {
+	}
+
+}
+
+message NozzleRequestParams {
+     uint64 StoreID = 1; 	//门店编号
+     uint32 NozzleID = 2;  	//油枪编号
+}
+
+// 交易记录类型
+enum TxType {
+	CardNormal = 0;//卡正常
+	CardOutInTrans = 1;//逃卡
+	CardDebitError = 2;//错卡
+	CardGreyDebit = 3;//补扣
+	CardGreyUnlock = 4;//补充
+	CardEmployeeOnDuty = 5;//员工上班
+	CardEmployeeOffDuty = 6;//员工下班
+	NoCard = 7;//非卡交易
+	PriceReceived = 8;//油价接收
+	CardRefused = 9;//卡错拒绝
+}
+
+// 油机交易记录
+message Transaction {
+	 string mdc_id = 1;//box序列号
+	 uint32 mdc_tx_counter = 2;//box交易编号
+	 uint32 comm_terminal_id = 3;//通讯终端编号
+	  uint32 comm_terminal_tx_counter = 4;//通讯终端交易编号
+	 int32 side_in_terminal = 5;//通讯终端内面号
+	 int32 item_in_side = 6;//通讯终端面内顺序号
+	 TxType tx_type = 7;//交易记录类型类型
+	 uint64 datetime = 8;//时间戳,EPOCH秒数
+	  string asn = 9;//卡应用号
+	  uint32 balance = 10;//余额
+	  uint32 amount = 11;//数额
+	  uint32 card_tx_counter = 12;//卡交易号
+	  uint32 tac = 13;//电子签名
+	  uint32 gmac = 14;//解灰认证码
+	  uint32 psam_tac = 15;//灰锁签名
+	  string psam_asn = 16;//PSAM应用号
+	  string psam_terminal_id = 17;//PSAM编号
+	  uint32 psam_terminal_tx_counter = 18;//PSAM终端交易计数器
+	  uint32 debit_source = 19;//扣款来源
+	  uint32 unit = 20;//结算单位+方式
+	  uint32 card_type = 21;//卡类型
+	  uint32 card_key_ver_item = 22;//卡密钥索引+版本
+	  uint32 nozzle_code = 23;//枪号
+	  string grade_code = 24;//油品代码
+	  uint32 volume = 25;//升数，单位0.01
+	  uint32 price = 26;//成交价格.非卡小数点后两位.其余按unit规定
+	  uint32 employee_id = 27;//员工号
+	  uint32 volume_total = 28;//累计升数,单位0.01
+	  uint32 terminal_mac = 29;//终端数据认证码
+	  uint64 recv_time = 30;//box接收时间
+	  uint32 get_mode = 31;//获取方式
+}
+
+// 油罐状态
+message TankStatus {
+	  string mdc_id = 1;//box序列号
+	  uint32 comm_terminal_id = 2;//通讯终端编号
+	  uint32 tank_id = 3;//油罐ID
+	  uint32 probe_id = 4;//探棒ID
+	  uint64 datetime = 5;//时间戳,EPOCH秒数
+	  uint32 volume = 6;//油体积,单位0.01
+	  uint32 tc_volume = 7;//净油体积,单位0.01
+	  uint32 ullage = 8;//空容升数,单位0.01
+	  uint32 height = 9;//油面高,mm
+	  uint32 water_height = 10;//水面高,mm
+	  uint32 temperature = 11;//温度
+	  uint64 record_counter = 12;//计数器
+}
+
+// 加油开始事件
+message RefuelStartedEvent {
+	  string mdc_id = 1;//box序列号
+	  uint64 datetime = 2;//事件时间
+	  uint32 comm_terminal_id = 3;//通讯终端编号
+	  uint32 side_in_terminal = 4;//通讯终端内面号
+	  uint32 item_in_side = 5;//通讯终端面内顺序号
+	  uint32 nozzle_code = 6;//枪号
+}
+
+// 加油结束事件
+message RefuelFinishedEvent {
+	  string mdc_id = 1;//box序列号
+	  uint64 datetime = 2;//事件时间
+	  uint32 comm_terminal_id = 3;//通讯终端编号
+	  uint32 side_in_terminal = 4;//通讯终端内面号
+	  uint32 item_in_side = 5;//通讯终端面内顺序号
+	  uint32 nozzle_code = 6;//枪号
+	  uint32 volume = 7;//油量
+	  uint32 volume_total = 8;//油量累计
+}
+
+// 油卡插入事件
+message CardInsertedEvent {
+	  string mdc_id = 1;//box序列号
+	  uint64 datetime = 2;//事件时间
+	  uint32 comm_terminal_id = 3;//通讯终端编号
+	  uint32 side_in_terminal = 4;//通讯终端内面号
+	  uint32 item_in_side = 5;//通讯终端面内顺序号
+	  uint32 nozzle_code = 6;//枪号
+	  string asn = 7;//卡应用号
+	  uint32 balance = 8;//卡余额
+}
+
+
+// 油枪离线事件
+message NozzleOfflineEvent {
+	  string mdc_id = 1;//box序列号
+	  uint64 datetime = 2;//事件时间
+	  uint32 comm_terminal_id = 3;//通讯终端编号
+	  uint32 side_in_terminal = 4;//通讯终端内面号
+	  uint32 item_in_side = 5;//通讯终端面内顺序号
+	  uint32 nozzle_code = 6;//枪号
+}
+// 油枪上线线事件
+message NozzleOnlineEvent {
+	  string mdc_id = 1;//box序列号
+	  uint64 datetime = 2;//事件时间
+	  uint32 comm_terminal_id = 3;//通讯终端编号
+	  uint32 side_in_terminal = 4;//通讯终端内面号
+	  uint32 item_in_side = 5;//通讯终端面内顺序号
+	  uint32 nozzle_code = 6;//枪号
+}
+
+// 加油卡弹出事件
+message CardPopEvent {
+	  string mdc_id = 1;//box序列号
+	  uint64 datetime = 2;//事件时间
+	  uint32 comm_terminal_id = 3;//通讯终端编号
+	  uint32 side_in_terminal = 4;//通讯终端内面号
+	  uint32 item_in_side = 5;//通讯终端面内顺序号
+	  uint32 nozzle_code = 6;//枪号
+}
+
+//油枪配置更新通知
+message NozzleConfigUpdated {
+	  string mdc_id =1;//box序列号
+	  uint64 data_version =2;//数据版本号
+}
+
+//油价更新通知
+message NozzlePriceConfigUpdated {
+	  string mdc_id =1;//box序列号
+	  uint64 data_version =2;//数据版本号
+}
+
+//液位仪配置更新通知
+message AtgConfigUpdated {
+	  string mdc_id = 1;//box序列号
+	  uint64 data_version = 2;//数据版本号
+}
+
+
+//获取液位仪配置请求
+message GetAtgConfigReq {
+	  string mdc_id = 1;//box序列号
+	  uint64 data_version = 2;//数据版本号
+}
+
+
+//探棒条目
+message Probe {
+	  uint32 probe_id = 1;//探棒序号
+	  uint32 probe_address_len = 2;//探棒地址长度
+	  bytes probe_address = 3;//探棒地址
+	  uint32 tank_code = 4;//连接罐号
+}
+
+//液位仪终端条目
+message AtgTerminal {
+	  uint32 comm_terminal_id = 1;//通讯终端编号
+	  bytes comm_terminal_type = 2;//通讯终端类型
+	  uint32 access_mode = 3;//接入模式
+	  bytes access_param = 4;//接入参数
+	  uint32 probe_count = 5;//探棒个数
+	repeated Probe probe_items = 6;//探棒列表
+}
+
+//获取液位仪配置响应
+message GetAtgConfigResp {
+	  string mdc_id = 1;//box序列号
+	  uint64 data_version = 2;//数据版本号
+	  uint32 atg_terminal_count = 3;//液位仪终端个数
+	repeated AtgTerminal atg_terminal_items = 4;//液位仪终端列表
+}
+
+
+//获取油站版本号相关信息
+message GetStationConfigVersionReq {
+	  string mdc_id = 1;//box序列号
+}
+
+//油站版本号相关信息
+message GetStationConfigVersionResp {
+	  string mdc_id = 1;//box序列号
+	  uint64 whitelist_version = 2;//白名单列表版本号
+	  uint64 blacklist_version = 3;//黑名单列表版本号
+	  uint64 add_blacklist_version = 4;//新增黑名单列表版本号
+	  uint64 del_blacklist_version = 5;//新删黑名单列表版本号
+	  uint64 atg_cfg_tab_version = 6;//液位仪版本
+	  uint64 ppu_cfg_tab_version = 7;//油品油价版本
+	  uint64 sta_noz_tab_version = 8;//油站通用信息版本
+	  uint64 noz_En_CFG_version = 9;//保留信息
+}
+
+//获取服务器时间
+message GetServerTimeReq {
+	  string mdc_id = 1;//box序列号
+}
+
+//服务器时间
+message GetServerTimeResp {
+	  string mdc_id = 1;//box序列号
+	  uint64 srv_time = 2;//服务器时间
+}
+
+//查询油枪状态请求
+message GetNozzleStatusReq {
+	  string mdc_id = 1;//box序列号
+	  uint32 comm_terminal_id = 2;//通讯终端编号
+	  uint32 side_in_terminal = 3;//通讯终端内面号
+	  uint32 item_in_side = 4;//通讯终端面内顺序号
+	  uint32 nozzle_code = 5;//枪号
+}
+
+//查询油枪状态响应
+message GetNozzleStatusResp {
+	  string mdc_id = 1;//box序列号
+	  uint64 datetime = 2;//统计信息时间
+	  uint32 comm_terminal_id = 3;//通讯终端编号
+	  uint32 side_in_terminal = 4;//通讯终端内面号
+	  uint32 item_in_side = 5;//通讯终端面内顺序号
+	  uint32 nozzle_code = 6;//枪号
+	  uint32 nozzle_stauts = 7;//油枪状态 1/2/3/4 空闲/油卡插入/加油中/离线
+}
+
+//获取单笔交易请求
+message GetTransactionReq {
+	  string mdc_id = 1;//box序列号
+	  int64 comm_terminal_id = 2;//通讯终端编号
+	  int64 comm_terminal_tx_counter = 3;//通讯终端交易编号
+	  int64 box_tx_counter = 4;//box交易编号
+}
+
+//获取单笔交易响应
+message GetTransactionResp {
+	  string mdc_id = 1;//box序列号
+	  uint32 box_tx_counter = 2;//box交易编号
+	  uint32 comm_terminal_id = 3;//通讯终端编号
+	  uint32 comm_terminal_tx_counter = 4;//通讯终端交易编号
+	  int32 side_in_terminal = 5;//通讯终端内面号
+	  int32 item_in_side = 6;//通讯终端面内顺序号
+	  TxType tx_type = 7;//交易类型
+	  uint64 datetime = 8;//时间戳,EPOCH秒数
+	  string asn = 9;//卡应用号
+	  uint32 balance = 10;//余额
+	  uint32 amount = 11;//数额
+	  uint32 card_tx_counter = 12;//卡交易号
+	  uint32 tac = 13;//电子签名
+	  uint32 gmac = 14;//解灰认证码
+	  uint32 psam_tac = 15;//灰锁签名
+	  string psam_asn = 16;//PSAM应用号
+	  string psam_terminal_id = 17;//PSAM编号
+	  uint32 psam_terminal_tx_counter = 18;//PSAM终端交易计数器
+	  uint32 debit_source = 19;//扣款来源
+	  uint32 unit = 20;//结算单位+方式
+	  uint32 card_type = 21;//卡类型
+	  uint32 card_key_ver_item = 22;//卡密钥索引+版本
+	  uint32 nozzle_code = 23;//枪号
+	  string grade_code = 24;//油品代码
+	  uint32 volume = 25;//升数，单位0.01
+	  uint32 price = 26;//成交价格.非卡小数点后两位.其余按unit规定
+	  uint32 employee_id = 27;//员工号
+	  uint32 volume_total = 28;//累计升数,单位0.01
+	  uint32 terminal_mac = 29;//终端数据认证码
+	  uint64 recv_time = 30;//box接收时间
+	  uint32 get_mode = 31;//获取方式
+}
+
+
+

@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "google.golang.org/grpc"
 	_ "google.golang.org/grpc/balancer/grpclb"
+	"log"
 	"strconv"
 
 	"gohmx/api"
@@ -13,8 +14,16 @@ import (
 var oilClientPool *grpcpool.ClientPool
 
 func init() {
+	log.Println("Init gRPC ClientPool")
 	oilClientPool = grpcpool.NewClient("localhost:8010", nil)
 
+}
+
+func CloseGrpcPool() {
+	if oilClientPool != nil {
+		log.Println("Close gRPC ClientPool")
+		oilClientPool.Close()
+	}
 }
 
 func GetTankStatus(storeid_s string, tankid_s string) (interface{}, error) {
@@ -40,7 +49,8 @@ func GetTankStatus(storeid_s string, tankid_s string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	//由客户连接池管理
+	//defer conn.Close()
 
 	// 连接GRPC
 	grc := OilMachine.NewOilTankClient(conn)

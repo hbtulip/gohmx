@@ -8,10 +8,6 @@ import (
 	"gohmx/model"
 )
 
-func Init() {
-
-}
-
 func GetTankStatus(c *gin.Context) {
 	storeid_s := c.DefaultQuery("storeid", "1000")
 	tankid_s := c.Request.URL.Query().Get("tankid")
